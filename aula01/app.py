@@ -19,6 +19,6 @@ preco_maior = dados.obter_preco_maior(livros)
 col1.metric("Total de Livros", qtd_livros)
 col2.metric("Preço médio", f"£{media_preco:.2f}")
 col3.metric("Qtd. livros 5 estrelas", cinco_estrelas)
-col4.metric("Preço do livro mais caro", preco_maior)
+col4.metric("Preço do livro mais caro", f"£{preco_maior}")
 
 st.dataframe(livros)
