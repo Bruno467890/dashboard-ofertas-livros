@@ -45,6 +45,18 @@ def contar_cinco_estrelas(livros):
             contador += 1
     return contador
 
+def obter_preco_maior(livros):
+    preco_original_maior: str = livros[0]["preco"]
+    preco_original_limpo_maior: str = preco_original_maior.replace("£", "")
+    preco_num_maior: float = float(preco_original_limpo_maior)
+    for livro in livros:
+        preco_original: str = livro["preco"]
+        preco_original_limpo: str = preco_original.replace("£", "")
+        preco_num: float = float(preco_original_limpo)
+        if preco_num > preco_num_maior:
+            preco_num_maior = preco_num
+    return preco_num_maior
+
 if __name__ == "__main__":
     livros = ler_livros()
     print(f"A quantidade de livros da coleção é de {len(livros)} livros.")
