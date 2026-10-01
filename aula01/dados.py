@@ -57,6 +57,16 @@ def obter_preco_maior(livros):
             preco_num_maior = preco_num
     return preco_num_maior
 
+def encontrar_mais_caro(livros):
+    """Devolve o livro de maior preço. O preço vem como texto ("£51.77")."""
+    mais_caro = livros[0]
+    for livro in livros:
+        preco = float(livro["preco"].replace("£", ""))
+        preco_mais_caro = float(mais_caro["preco"].replace("£", ""))
+        if preco > preco_mais_caro:
+            mais_caro = livro
+    return mais_caro
+
 if __name__ == "__main__":
     livros = ler_livros()
     print(f"A quantidade de livros da coleção é de {len(livros)} livros.")
