@@ -61,6 +61,19 @@ def montar_tabela(livros):
         tabela.append(linha)
     return tabela
 
+def montar_tabela_favoritos(favoritos):
+    """Prepara as linhas que aparecem na tabela, com nomes de coluna amigáveis."""
+    tabela = []
+    for titulo, favorito in favoritos.items():
+        linha = {
+            "Título": titulo["titulo"],
+            "Preço": f"£ {favorito['preco']:.2f}",
+            "Status": favorito["status"],
+            "Comentário": favorito["comentario"]
+        }
+        tabela.append(linha)
+    return tabela
+
 
 def buscar_por_titulo(livros, busca):
     """Devolve só os livros cujo título contém o texto buscado."""
@@ -92,6 +105,10 @@ def filtrar_por_categoria(livros, categoria):
             resultado.append(livro)
     return resultado
 
+def listar_titulos(livros):
+    titulos = []
+    for livro in livros:
+        titulos.append(livro["titulo"])
 
 def main():
     st.set_page_config(page_title="Dashboard de Livros", page_icon="📚", layout="wide")
@@ -99,6 +116,34 @@ def main():
 
     livros = dados.carregar_livros()
 
+    with aba_catalogo():
+        mostrar_catalogo(livros)
+
+    with aba_favoritos():
+        mostrar_favoritos(livros)
+
+def somar_favoritos(favoritos):
+    soma = 0
+    for favorito in favoritos.values():
+        soma = soma + favorito["preco"]
+    return soma
+
+def mostrar_favoritos():
+    favoritos = dados.carregar_favoritos()
+
+    if len(favoritos) <= 0:
+        st.warning("Nenhum favorio foi adicionado")
+        return
+    
+    col1, col2 = st.columns(2)
+    col1.metric("Favoritos", len(favoritos))
+    col2.metric("Valor Total", somar_favoritos(favoritos))
+
+
+
+
+
+def mostrar_catalogo(livros):
     col1, col2, col3, col4 = st.columns(4)
     col1.metric("Total de livros", len(livros))
     col2.metric("Preço médio", f"£{round(calcular_preco_medio(livros), 2)}")
@@ -121,6 +166,17 @@ def main():
     else:
         st.caption(f"{len(encontrados)} livros encontrados")
         st.dataframe(montar_tabela(encontrados), hide_index=True, width="stretch")
+
+        titulos_livros = listar_titulos(livros)
+        titulo_selecionado = st.selectbox("Escolhe um livro", titulos_livros)
+
+        livro_favorito = buscar_por_titulo(livros, titulo_selecionado)
+        if st.button("Inserir Favorito"):
+            ## Criar o arquivo
+            ## Incluir p cabeçalho
+            ## Incluir o dado do livro
+            dados.salvar_favoritos(livro_favorito[0])
+            st.success(f'O livro{titulo_selecionado}" foi inserido na lista de favoritos.')
 
 
 if __name__ == "__main__":

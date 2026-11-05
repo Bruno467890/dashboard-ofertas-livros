@@ -7,6 +7,7 @@ from pathlib import Path
 # mesmo quando é executado a partir de outra pasta (como no Streamlit Cloud).
 PASTA = Path(__file__).parent
 CAMINHO_LIVROS = PASTA / "livros.csv"
+CAMINHO_FAVORITOS = PASTA / "favoritos.csv"
 
 def encontrar_mais_caro(livros):
     """Devolve o livro de maior preço. O preço vem como texto ("£51.77")."""
@@ -70,6 +71,33 @@ def preparar_livros(linhas):
 def carregar_livros(caminho=CAMINHO_LIVROS):
     """Lê o CSV e já devolve os livros prontos para usar."""
     return preparar_livros(ler_livros(caminho))
+
+def carregar_favoritos():
+    favoritos = {}
+    with open(CAMINHO_FAVORITOS, encoding="utf-8", newline="") as arquivo:
+        leitor = csv.DictReader(arquivo)
+        for linha in leitor:
+            favoritos[linha["titulo"]] = {
+                "preco": float(linha["preco"]),
+                "categoria": linha["categoria"],
+                "status": linha["status"],
+                "comentario": linha["comentario"]
+            }
+    return favoritos
+
+def salvar_favoritos(favorito):
+    arquivo_existe: bool = CAMINHO_FAVORITOS.exists()
+    with open("favoritos.csv", mode="a", encoding="utf-8") as arquivo:
+        writer = csv.DictWriter(arquivo, ["titulo", "preco", "categoria", "status", "comentario"])
+        if not arquivo_existe:
+            writer.writeheader():
+        writer.writerow({
+            "titulo": favorito["titulo"],
+            "preco": favorito["preco"],
+            "categoria": favorito["categoria"],
+            "status": "Quero ler",
+            "comentario": ""
+        })
 
 
 if __name__ == "__main__":
