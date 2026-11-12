@@ -56,7 +56,7 @@ def montar_tabela(livros):
             "Categoria": livro["categoria"],
             "Nota": "⭐" * livro["nota"],
             "Preço": f"£ {livro['preco']:.2f}",
-            "Faixa": classificar_preco(livro["preco"]),
+            "Faixa": classificar_preco(livro["preco"])
         }
         tabela.append(linha)
     return tabela
@@ -85,30 +85,29 @@ def buscar_por_titulo(livros, busca):
     return resultado
 
 
-def listar_categorias(livros):
+def listar_categorias_set(livros):
     """Devolve as categorias dos livros, sem repetição e em ordem alfabética."""
-    categorias = []
+    categorias = set()
     for livro in livros:
         if livro["categoria"] not in categorias:
             categorias.append(livro["categoria"])
-    categorias.sort()
-    return categorias
+    return sorted(categorias)
 
 
 def filtrar_por_categoria(livros, categoria):
     """Devolve só os livros da categoria escolhida. Com "Todas", devolve todos."""
     if categoria == "Todas":
         return livros
-    resultado = []
-    for livro in livros:
-        if livro["categoria"] == categoria:
-            resultado.append(livro)
-    return resultado
+    resultado = [livro for livro in livros if livro["categoria"] == categoria]
 
 def listar_titulos(livros):
     titulos = []
     for livro in livros:
         titulos.append(livro["titulo"])
+    return titulos
+
+def listar_titulos_v2(livros):
+    return [livro["titulo"] for livro in livros]
 
 def main():
     st.set_page_config(page_title="Dashboard de Livros", page_icon="📚", layout="wide")
@@ -116,10 +115,11 @@ def main():
 
     livros = dados.carregar_livros()
 
-    with aba_catalogo():
-        mostrar_catalogo(livros)
+    aba_catalogo, aba_favoritos = st.tabs([" Catálogo", " Favoritos"])
 
-    with aba_favoritos():
+    with aba_catalogo:
+        mostrar_catalogo(livros)
+    with aba_favoritos:
         mostrar_favoritos(livros)
 
 def somar_favoritos(favoritos):
@@ -138,6 +138,31 @@ def mostrar_favoritos():
     col1, col2 = st.columns(2)
     col1.metric("Favoritos", len(favoritos))
     col2.metric("Valor Total", somar_favoritos(favoritos))
+
+    st.dataframe(montar_tabela_favoritos(favoritos))
+    
+    favorito_selecionado = st.selectbox("Selecione um favorito:", favoritos.keys)
+
+    favorito = favoritos[favorito_selecionado]['status']
+    novo_status = st.text_input("Status", favorito)
+    novo_comentario = st.text_input("Comentário", favorito)
+
+    if st.button("Remover Favorito"):
+        ## Remove do dicionário (memória volátil)
+        del favoritos[favorito_selecionado]
+        ## Remove do arquivo (memória persistente)
+        dados.gravar_favoritos
+        st.success(f"O favorito {favorito_selecionado} foi removido")
+        st.rerun()
+
+    if st.button("Editar Favorito"):
+        ## Alterar os dados em memória (dicionário)
+        favorito.update({"status": novo_status, "comentario": novo_comentario})
+        dados.gravar_favoritos(favoritos)
+        st.success(f"O favorito {favorito_selecionado} foi alterado com sucesso")
+        st.rerun()
+
+
 
 
 
@@ -160,6 +185,7 @@ def mostrar_catalogo(livros):
     # Cada filtro recebe o resultado do anterior
     encontrados = filtrar_por_categoria(livros, categoria)
     encontrados = buscar_por_titulo(encontrados, busca)
+    encontrados = filtrar_por_preco(encontrados, minimo, maximo)
 
     if len(encontrados) == 0:
         st.warning("Nenhum livro encontrado.")

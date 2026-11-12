@@ -8,6 +8,7 @@ from pathlib import Path
 PASTA = Path(__file__).parent
 CAMINHO_LIVROS = PASTA / "livros.csv"
 CAMINHO_FAVORITOS = PASTA / "favoritos.csv"
+CAMPOS_FAVORITO = ["titulo", "preco", "categoria", "status", "comentario"]
 
 def encontrar_mais_caro(livros):
     """Devolve o livro de maior preço. O preço vem como texto ("£51.77")."""
@@ -74,15 +75,18 @@ def carregar_livros(caminho=CAMINHO_LIVROS):
 
 def carregar_favoritos():
     favoritos = {}
-    with open(CAMINHO_FAVORITOS, encoding="utf-8", newline="") as arquivo:
-        leitor = csv.DictReader(arquivo)
-        for linha in leitor:
-            favoritos[linha["titulo"]] = {
-                "preco": float(linha["preco"]),
-                "categoria": linha["categoria"],
-                "status": linha["status"],
-                "comentario": linha["comentario"]
-            }
+    try:
+        with open(CAMINHO_FAVORITOS, encoding="utf-8", newline="") as arquivo:
+            leitor = csv.DictReader(arquivo)
+            for linha in leitor:
+                favoritos[linha["titulo"]] = {
+                    "preco": float(linha["preco"]),
+                    "categoria": linha["categoria"],
+                    "status": linha["status"],
+                    "comentario": linha["comentario"],
+                }
+    except FileNotFoundError:
+        pass
     return favoritos
 
 def salvar_favoritos(favorito):
@@ -90,17 +94,37 @@ def salvar_favoritos(favorito):
     with open("favoritos.csv", mode="a", encoding="utf-8") as arquivo:
         writer = csv.DictWriter(arquivo, ["titulo", "preco", "categoria", "status", "comentario"])
         if not arquivo_existe:
-            writer.writeheader():
+            writer.writeheader()
         writer.writerow({
             "titulo": favorito["titulo"],
             "preco": favorito["preco"],
             "categoria": favorito["categoria"],
             "status": "Quero ler",
-            "comentario": ""
+            "comentario": "",
         })
+
+def gravar_favoritos(favoritos):
+    """Reescreve o arquivo inteiro com os favoritos do dicionário (modo "w")."""
+    with open(CAMINHO_FAVORITOS, "w", encoding="utf-8", newline="") as arquivo:
+        writer = csv.DictWriter(arquivo, fieldnames=CAMPOS_FAVORITO)
+        writer.writeheader()
+        for titulo, favorito in favoritos.items():
+            writer.writerow({
+                "titulo": titulo,
+                "preco": favorito["preco"],
+                "categoria": favorito["categoria"],
+                "status": favorito["status"],
+                "comentario": favorito["comentario"],
+            })
+    
+def get_preco(livro):
+    return livro["preco"]
 
 
 if __name__ == "__main__":
     # Só roda com "python dados.py". Quando o app faz "import dados", nada disto executa.
-    print("Texto do CSV:  ", ler_livros()[0])
-    print("Depois de preparar:", carregar_livros()[0])
+    # print("Texto do CSV:  ", ler_livros()[0])
+    # print("Depois de preparar:", carregar_livros()[0])
+
+    livros = carregar_livros
+    livros_sorted = sorted(livros, key=lambda livro:livro["preco"])
